@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "FlowTrim",
+    "slug": "flowtrim-mobile",
+    "version": "0.1.0",
+    "scheme": "flowtrim",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "io.github.andermc10.flowtrim",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#070B0D",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": ["expo-router", "expo-status-bar", "expo-system-ui", "expo-localization"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
