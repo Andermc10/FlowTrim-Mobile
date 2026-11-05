@@ -38,6 +38,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Los tipos generados deben coincidir con la copia del contrato (api/openapi.json). Si alguien actualiza el
+      # contrato y olvida `npm run api:types`, o edita schema.d.ts a mano, este paso falla.
+      - name: API types are up to date
+        run: |
+          npm run api:types
+          git diff --exit-code -- src/core/api/schema.d.ts
+
       - name: Lint
         run: npm run lint
 

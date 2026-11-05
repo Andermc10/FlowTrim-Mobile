@@ -4,3 +4,5 @@ coverage
 android
 ios
 package-lock.json
+api/openapi.json
+src/core/api/schema.d.ts

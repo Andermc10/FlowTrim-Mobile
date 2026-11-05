@@ -33,4 +33,22 @@ describe('translate', () => {
   it('translate_SpanishKey_ReturnsSpanishText', () => {
     expect(translate('es', 'tabs.payments')).toBe('Pagos');
   });
+
+  it('translate_WithParams_ReplacesMarkers', () => {
+    expect(translate('en', 'errors.reference', { id: 'abc-123' })).toBe('Reference: abc-123');
+  });
+
+  it('translate_MissingParam_LeavesMarkerVisible', () => {
+    expect(translate('en', 'errors.rateLimited', {})).toContain('{seconds}');
+  });
+
+  // Cada marcador {x} del inglés debe existir también en español, o el texto traducido perdería el dato.
+  it('translations_Spanish_KeepsEveryPlaceholder', () => {
+    for (const [key, english] of Object.entries(translations.en)) {
+      const markers = english.match(/\{\w+\}/g) ?? [];
+      for (const marker of markers) {
+        expect(translations.es[key as keyof typeof translations.es]).toContain(marker);
+      }
+    }
+  });
 });

@@ -14,14 +14,23 @@ export function pickLanguage(deviceLanguageCodes: readonly (string | null)[]): L
   return 'en';
 }
 
-export function translate(language: Language, key: TranslationKey): string {
-  return translations[language][key];
+export type TranslationParams = Record<string, string | number>;
+
+// Reemplaza {nombre} por su valor; un marcador sin valor se deja visible para detectarlo en pruebas.
+export function translate(language: Language, key: TranslationKey, params?: TranslationParams): string {
+  const text = translations[language][key];
+  if (!params) {
+    return text;
+  }
+  return text.replace(/\{(\w+)\}/g, (marker, name: string) =>
+    name in params ? String(params[name]) : marker,
+  );
 }
 
 interface I18n {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, params?: TranslationParams) => string;
 }
 
 const I18nContext = createContext<I18n | null>(null);
@@ -39,7 +48,7 @@ export function I18nProvider({
   );
 
   const value = useMemo<I18n>(
-    () => ({ language, setLanguage, t: (key) => translate(language, key) }),
+    () => ({ language, setLanguage, t: (key, params) => translate(language, key, params) }),
     [language],
   );
 

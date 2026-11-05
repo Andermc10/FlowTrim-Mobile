@@ -18,6 +18,6 @@ module.exports = defineConfig([
   },
   {
     // Carpetas generadas que no se revisan.
-    ignores: ['dist/*', '.expo/*', 'android/*', 'ios/*', 'coverage/*'],
+    ignores: ['dist/*', '.expo/*', 'android/*', 'ios/*', 'coverage/*', 'src/core/api/schema.d.ts'],
   },
 ]);
