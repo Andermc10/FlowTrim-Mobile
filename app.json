@@ -18,7 +18,14 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "plugins": ["expo-router", "expo-status-bar", "expo-system-ui", "expo-localization"],
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-system-ui",
+      "expo-localization",
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
     "experiments": {
       "typedRoutes": true
     }
