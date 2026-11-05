@@ -1,0 +1,56 @@
+# CI de la app móvil (HU-81): lint, tipos, pruebas, auditoría de dependencias y empaquetado Android.
+# No usa secretos: no compila el APK (eso es EAS, HU-91) ni llama a la API.
+name: Mobile CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Mínimo privilegio: el job solo necesita leer el código.
+permissions:
+  contents: read
+
+# Un push nuevo a la misma rama cancela la ejecución anterior.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-test:
+    name: lint-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # npm ci instala exactamente lo que fija package-lock.json y falla si no coincide con package.json.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test -- --ci
+
+      # Falla con vulnerabilidades altas o críticas en lo que viaja dentro de la app (ver docs/TECH-DEBT.md).
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      # Empaqueta el JavaScript de Android: comprueba que la app compila para el teléfono.
+      - name: Android bundle
+        run: npx expo export --platform android --output-dir dist
