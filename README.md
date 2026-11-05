@@ -4,8 +4,8 @@ Android companion app for [FlowTrim](https://github.com/Andermc10/FlowTrim-front
 personal-finance engine. Built with **React Native + Expo + TypeScript**, it consumes the existing
 [FlowTrim API](https://github.com/Andermc10/FlowTrim-backend) without any backend change.
 
-> **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI) and HU-82 typed API client. Screens arrive
-> story by story;
+> **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client and HU-83 native
+> sign-in. Screens arrive story by story;
 > see the epic spec [`EP-17-flowtrim-mobile.md`](https://github.com/Andermc10/FlowTrim-tracker/blob/main/specs/EP-17-flowtrim-mobile.md).
 
 ## What it will do (and what it won't)
@@ -100,8 +100,11 @@ The checklist is **OWASP MASVS v2** (spec EP-17 §13). Already in place in HU-81
   scanning with push protection.
 - CI with read-only permissions and no secrets.
 
-Coming with their stories: tokens in the Android Keystore (`expo-secure-store`), PKCE sign-in in the system browser,
-biometric lock, private notifications. Known accepted gaps live in [`docs/TECH-DEBT.md`](docs/TECH-DEBT.md).
+Sign-in (HU-83, setup in [`docs/AUTH0-SETUP.md`](docs/AUTH0-SETUP.md)): Authorization Code + PKCE in the system
+browser, no client secret, refresh-token rotation; tokens only in `expo-secure-store` (Android Keystore); one refresh
+at a time (parallel refreshes would trip Auth0 reuse detection); signing out or a `401` clears the tokens and every
+cached query, so nothing of the previous account remains. Coming with their stories: biometric lock, private
+notifications. Known accepted gaps live in [`docs/TECH-DEBT.md`](docs/TECH-DEBT.md).
 
 ## Process
 
