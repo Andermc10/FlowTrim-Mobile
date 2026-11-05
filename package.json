@@ -13,9 +13,12 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "api:sync": "node scripts/api-sync.mjs",
+    "api:types": "node scripts/api-types.mjs"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.105.0",
     "expo": "58.0.21",
     "expo-constants": "58.0.15",
     "expo-linking": "58.0.16",
@@ -23,6 +26,7 @@
     "expo-router": "58.0.30",
     "expo-status-bar": "58.0.4",
     "expo-system-ui": "58.0.7",
+    "openapi-fetch": "0.17.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.1",
@@ -39,10 +43,16 @@
     "eslint-plugin-prettier": "5.5.7",
     "jest": "30.5.2",
     "jest-expo": "58.0.14",
+    "openapi-typescript": "7.13.0",
     "prettier": "3.9.10",
     "typescript": "6.0.3"
   },
   "jest": {
     "preset": "jest-expo"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   }
 }
