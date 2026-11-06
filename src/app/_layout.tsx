@@ -2,7 +2,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Alert } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ApiProvider } from '@/core/api/api-provider';
@@ -12,13 +13,36 @@ import { createAuthService } from '@/core/auth/auth-service';
 import { secureTokenStorage } from '@/core/auth/token-store';
 import { AppConfigError, getAppConfig, type AppConfig } from '@/core/config/app-config';
 import { I18nProvider, useI18n } from '@/core/i18n/i18n';
-import { ThemeProvider, useTheme } from '@/core/theme/theme';
+import type { Language } from '@/core/i18n/translations';
+import { AppLockProvider, useAppLock } from '@/core/lock/app-lock';
+import { nativeLockDevice } from '@/core/lock/lock-device';
+import { loadPreferences, savePreferences, type Preferences } from '@/core/preferences/preferences';
+import { ThemeProvider, useTheme, type ThemePreference } from '@/core/theme/theme';
+import { LockScreen } from '@/features/lock/lock-screen';
 import { StatusScreen } from '@/shared/ui/status-screen';
+
+// Ofrece el bloqueo una sola vez tras iniciar sesión (spec D9), con el diálogo nativo del sistema.
+function useLockOffer() {
+  const { t } = useI18n();
+  const { offerPending, dismissOffer, setEnabled } = useAppLock();
+  useEffect(() => {
+    if (!offerPending) {
+      return;
+    }
+    dismissOffer();
+    Alert.alert(t('lock.offer.title'), t('lock.offer.message'), [
+      { text: t('lock.offer.later'), style: 'cancel' },
+      { text: t('lock.offer.enable'), onPress: () => void setEnabled(true) },
+    ]);
+  }, [offerPending, dismissOffer, setEnabled, t]);
+}
 
 function ProtectedStack() {
   const { scheme, colors } = useTheme();
   const { t } = useI18n();
   const { status } = useAuth();
+  const { locked, enabled } = useAppLock();
+  useLockOffer();
 
   if (status === 'restoring') {
     return <StatusScreen busy message={t('session.restoring')} />;
@@ -47,6 +71,10 @@ function ProtectedStack() {
         </Stack.Protected>
         <Stack.Screen name="callback" />
       </Stack>
+      {/* Con sesión nada de lo de atrás se ve: mientras se lee el ajuste, una cubierta neutra (sin pedir huella,
+          porque el ajuste aún podría decir "bloqueado" y anular un desbloqueo temprano); si está bloqueada, el bloqueo. */}
+      {signedIn && enabled === null ? <StatusScreen cover busy message={t('session.restoring')} /> : null}
+      {signedIn && enabled !== null && locked ? <LockScreen /> : null}
     </>
   );
 }
@@ -70,9 +98,11 @@ function SessionRoot({ config }: { config: AppConfig }) {
   const [service] = useState(() => createAuthService(config));
   return (
     <AuthProvider service={service} storage={secureTokenStorage}>
-      <ApiProvider baseUrl={config.apiUrl}>
-        <ProtectedStack />
-      </ApiProvider>
+      <AppLockProvider device={nativeLockDevice}>
+        <ApiProvider baseUrl={config.apiUrl}>
+          <ProtectedStack />
+        </ApiProvider>
+      </AppLockProvider>
     </AuthProvider>
   );
 }
@@ -86,17 +116,60 @@ function ConfiguredApp() {
   return <SessionRoot config={result.config} />;
 }
 
+// Lee idioma y tema guardados ANTES de pintar (evita un parpadeo de tema) y guarda cada cambio.
+function PreferencesGate({
+  children,
+}: {
+  children: (preferences: Preferences, update: (patch: Partial<Preferences>) => void) => ReactNode;
+}) {
+  const [preferences, setPreferences] = useState<Preferences | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void loadPreferences().then((loaded) => {
+      if (active) setPreferences(loaded);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Guardar en un efecto (no dentro del setState) mantiene las actualizaciones de estado puras.
+  useEffect(() => {
+    if (preferences) {
+      void savePreferences(preferences);
+    }
+  }, [preferences]);
+
+  const update = useCallback((patch: Partial<Preferences>) => {
+    setPreferences((current) => (current ? { ...current, ...patch } : current));
+  }, []);
+
+  // Lectura local de milisegundos: mientras tanto, nada (no hay datos que mostrar todavía).
+  return preferences ? children(preferences, update) : null;
+}
+
 export default function RootLayout() {
   // Un solo caché para toda la app; useState garantiza que no se recree en cada render.
   const [queryClient] = useState(createQueryClient);
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <I18nProvider>
-            <ConfiguredApp />
-          </I18nProvider>
-        </ThemeProvider>
+        <PreferencesGate>
+          {(preferences, update) => (
+            <ThemeProvider
+              initialPreference={preferences.theme}
+              onPreferenceChange={(theme: ThemePreference) => update({ theme })}
+            >
+              <I18nProvider
+                initialLanguage={preferences.language}
+                onLanguageChange={(language: Language) => update({ language })}
+              >
+                <ConfiguredApp />
+              </I18nProvider>
+            </ThemeProvider>
+          )}
+        </PreferencesGate>
       </QueryClientProvider>
     </SafeAreaProvider>
   );

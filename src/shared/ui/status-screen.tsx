@@ -3,11 +3,26 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/core/theme/theme';
 
-export function StatusScreen({ title, message, busy }: { title?: string; message: string; busy?: boolean }) {
+export function StatusScreen({
+  title,
+  message,
+  busy,
+  cover,
+}: {
+  title?: string;
+  message: string;
+  busy?: boolean;
+  /** Se dibuja encima de todo (oculta el contenido de atrás), como la pantalla de bloqueo. */
+  cover?: boolean;
+}) {
   const { colors, spacing, typography } = useTheme();
   return (
     <View
-      style={[styles.container, { backgroundColor: colors.background, padding: spacing.xl, gap: spacing.md }]}
+      style={[
+        cover ? StyleSheet.absoluteFill : null,
+        styles.container,
+        { backgroundColor: colors.background, padding: spacing.xl, gap: spacing.md },
+      ]}
       accessibilityLiveRegion="polite"
     >
       {busy ? <ActivityIndicator size="large" color={colors.primary} /> : null}
