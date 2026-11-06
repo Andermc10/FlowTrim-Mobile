@@ -93,7 +93,7 @@ export function createAuthService(config: AppConfig): AuthService {
           { clientId: config.auth0ClientId, refreshToken: session.refreshToken, scopes: SCOPES },
           document,
         );
-        return sessionFromTokenResponse(tokens, Date.now(), session.refreshToken);
+        return sessionFromTokenResponse(tokens, Date.now(), session);
       } catch (error) {
         // Auth0 responde invalid_grant cuando el refresh token fue revocado, rotado o venció.
         if (error instanceof TokenError) {
