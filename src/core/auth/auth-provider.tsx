@@ -13,6 +13,8 @@ export type AuthNotice = 'expired' | 'cancelled' | 'failed' | null;
 interface Auth {
   status: AuthStatus;
   notice: AuthNotice;
+  /** Correo de la cuenta (del id_token), solo para mostrarlo. */
+  email: string | undefined;
   signingIn: boolean;
   signIn: () => Promise<void>;
   signOut: () => void;
@@ -34,6 +36,7 @@ export function AuthProvider({
 }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AuthStatus>('restoring');
+  const [email, setEmail] = useState<string | undefined>(undefined);
   const [notice, setNotice] = useState<AuthNotice>(null);
   const [signingIn, setSigningIn] = useState(false);
 
@@ -51,6 +54,7 @@ export function AuthProvider({
       now: () => Date.now(),
       onExpired: () => {
         queryClient.clear();
+        setEmail(undefined);
         setNotice('expired');
         setStatus('signedOut');
       },
@@ -64,6 +68,7 @@ export function AuthProvider({
       .catch(() => null)
       .then((session) => {
         if (active) {
+          setEmail(session?.email);
           setStatus(session ? 'signedIn' : 'signedOut');
         }
       });
@@ -81,6 +86,7 @@ export function AuthProvider({
         // Por si quedaron datos de otra cuenta en memoria antes de entrar.
         resetLocalData();
         await manager.setSession(result.session);
+        setEmail(result.session.email);
         setStatus('signedIn');
       } else {
         setNotice(result.kind);
@@ -98,6 +104,7 @@ export function AuthProvider({
       const session = manager.getSession();
       await manager.clear();
       resetLocalData();
+      setEmail(undefined);
       setNotice(null);
       setStatus('signedOut');
       await service.endSession(session);
@@ -108,6 +115,7 @@ export function AuthProvider({
   const expireSession = useCallback(() => {
     void manager.clear().then(() => {
       resetLocalData();
+      setEmail(undefined);
       setNotice('expired');
       setStatus('signedOut');
     });
@@ -119,6 +127,7 @@ export function AuthProvider({
   const value = useMemo<Auth>(
     () => ({
       status,
+      email,
       notice,
       signingIn,
       signIn,
@@ -126,7 +135,7 @@ export function AuthProvider({
       getAccessToken,
       expireSession,
     }),
-    [status, notice, signingIn, signIn, signOut, getAccessToken, expireSession],
+    [status, email, notice, signingIn, signIn, signOut, getAccessToken, expireSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,4 +1,5 @@
 import {
+  emailFromIdToken,
   needsRefresh,
   parseStoredSession,
   REFRESH_MARGIN_MS,
@@ -53,7 +54,8 @@ describe('session rules', () => {
 
   it('sessionFromTokenResponse_WithoutNewRefreshToken_KeepsPrevious', () => {
     expect(
-      sessionFromTokenResponse({ accessToken: 'a', expiresIn: 60 }, NOW, 'old-refresh').refreshToken,
+      sessionFromTokenResponse({ accessToken: 'a', expiresIn: 60 }, NOW, { refreshToken: 'old-refresh' })
+        .refreshToken,
     ).toBe('old-refresh');
   });
 
@@ -173,5 +175,38 @@ describe('createTokenManager', () => {
 
     expect(storage.value()).toBeNull();
     await expect(manager.getAccessToken()).resolves.toBeNull();
+  });
+});
+
+describe('emailFromIdToken', () => {
+  // JWT de prueba sin firma real: { "email": "ana.muñoz@example.test" } en base64url.
+  const encode = (claims: object) =>
+    // UTF-8 → bytes → base64 (como hace Auth0), sin depender de Buffer de Node.
+    btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(claims))))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  const idToken = (claims: object) => `header.${encode(claims)}.signature`;
+
+  it('emailFromIdToken_ValidToken_ReturnsEmailWithAccents', () => {
+    expect(emailFromIdToken(idToken({ email: 'ana.muñoz@example.test' }))).toBe('ana.muñoz@example.test');
+  });
+
+  it.each([undefined, '', 'not-a-jwt', 'a.%%%.c'])(
+    'emailFromIdToken_Invalid_ReturnsUndefined (%s)',
+    (token) => {
+      expect(emailFromIdToken(token)).toBeUndefined();
+    },
+  );
+
+  it('emailFromIdToken_NoEmailClaim_ReturnsUndefined', () => {
+    expect(emailFromIdToken(idToken({ sub: 'auth0|x' }))).toBeUndefined();
+  });
+
+  it('sessionFromTokenResponse_RefreshWithoutIdToken_KeepsPreviousEmail', () => {
+    const session = sessionFromTokenResponse({ accessToken: 'a', expiresIn: 60 }, NOW, {
+      email: 'a@example.test',
+    });
+    expect(session.email).toBe('a@example.test');
   });
 });
