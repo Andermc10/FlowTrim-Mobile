@@ -2,6 +2,7 @@
 import type { AuthService, SignInResult } from '@/core/auth/auth-service';
 import type { StoredSession } from '@/core/auth/session';
 import type { TokenStorage } from '@/core/auth/token-manager';
+import type { LockDevice } from '@/core/lock/lock-device';
 
 export const validSession = (): StoredSession => ({
   accessToken: 'test-access-token',
@@ -40,4 +41,37 @@ export function createFakeAuthService(signInResult: () => SignInResult = () => (
     },
   };
   return service;
+}
+
+export interface FakeLockOptions {
+  /** 0 = nada configurado, 1 = PIN, 3 = huella. */
+  level?: number;
+  enabled?: boolean;
+  offered?: boolean;
+  authenticates?: boolean;
+}
+
+// Teléfono simulado para el bloqueo: qué tiene configurado, si la huella "funciona" y qué quedó guardado.
+export function createFakeLockDevice(options: FakeLockOptions = {}) {
+  const state = {
+    level: options.level ?? 3,
+    enabled: options.enabled ?? false,
+    offered: options.offered ?? true,
+    authenticates: options.authenticates ?? true,
+  };
+  const device: LockDevice & { state: typeof state } = {
+    state,
+    enrolledLevel: jest.fn(async () => state.level),
+    authenticate: jest.fn(async () => state.authenticates),
+    loadEnabled: jest.fn(async () => state.enabled),
+    saveEnabled: jest.fn(async (enabled: boolean) => {
+      state.enabled = enabled;
+    }),
+    loadOffered: jest.fn(async () => state.offered),
+    saveOffered: jest.fn(async () => {
+      state.offered = true;
+    }),
+    protectScreen: jest.fn(async () => undefined),
+  };
+  return device;
 }
