@@ -4,8 +4,8 @@ Android companion app for [FlowTrim](https://github.com/Andermc10/FlowTrim-front
 personal-finance engine. Built with **React Native + Expo + TypeScript**, it consumes the existing
 [FlowTrim API](https://github.com/Andermc10/FlowTrim-backend) without any backend change.
 
-> **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client and HU-83 native
-> sign-in. Screens arrive story by story;
+> **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client, HU-83 native
+> sign-in and HU-84 settings and app lock. Screens arrive story by story;
 > see the epic spec [`EP-17-flowtrim-mobile.md`](https://github.com/Andermc10/FlowTrim-tracker/blob/main/specs/EP-17-flowtrim-mobile.md).
 
 ## What it will do (and what it won't)
@@ -103,8 +103,20 @@ The checklist is **OWASP MASVS v2** (spec EP-17 §13). Already in place in HU-81
 Sign-in (HU-83, setup in [`docs/AUTH0-SETUP.md`](docs/AUTH0-SETUP.md)): Authorization Code + PKCE in the system
 browser, no client secret, refresh-token rotation; tokens only in `expo-secure-store` (Android Keystore); one refresh
 at a time (parallel refreshes would trip Auth0 reuse detection); signing out or a `401` clears the tokens and every
-cached query, so nothing of the previous account remains. Coming with their stories: biometric lock, private
-notifications. Known accepted gaps live in [`docs/TECH-DEBT.md`](docs/TECH-DEBT.md).
+cached query, so nothing of the previous account remains.
+
+App lock and settings (HU-84): optional fingerprint/PIN lock (`expo-local-authentication`, device PIN as fallback)
+on cold start and after more than 60 s in the background; the "on" flag lives in SecureStore and is cleared on
+sign-out; while the lock is on, `FLAG_SECURE` (`expo-screen-capture`) blanks the recent-apps preview and blocks
+screenshots. Permissions the app does not use are removed from the manifest (`READ_EXTERNAL_STORAGE`,
+`READ_MEDIA_IMAGES`, `DETECT_SCREEN_CAPTURE`). Language and theme are the only values in AsyncStorage (not
+sensitive). Coming with their stories: private notifications.
+
+| Stored where                      | What                                                          |
+| --------------------------------- | ------------------------------------------------------------- |
+| SecureStore (Android Keystore)    | session tokens, account e-mail, lock on/off                   |
+| AsyncStorage                      | language and theme preferences                                |
+| Memory only (cleared on sign-out) | API data cache (persisted read-only cache arrives with HU-90) |
 
 ## Process
 
