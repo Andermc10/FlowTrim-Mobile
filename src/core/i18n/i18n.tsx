@@ -1,6 +1,6 @@
 // Proveedor de idioma: elige inglés o español y entrega la función t() para traducir.
 import { getLocales } from 'expo-localization';
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import { translations, type Language, type TranslationKey } from './translations';
 
@@ -38,18 +38,29 @@ const I18nContext = createContext<I18n | null>(null);
 export function I18nProvider({
   children,
   initialLanguage,
+  onLanguageChange,
 }: {
   children: ReactNode;
   initialLanguage?: Language;
+  /** Avisa la elección del usuario para guardarla (el proveedor no sabe nada de almacenamiento). */
+  onLanguageChange?: (language: Language) => void;
 }) {
   // El valor inicial se calcula una sola vez (función en useState), no en cada render.
-  const [language, setLanguage] = useState<Language>(
+  const [language, setLanguageState] = useState<Language>(
     () => initialLanguage ?? pickLanguage(getLocales().map((locale) => locale.languageCode)),
+  );
+
+  const setLanguage = useCallback(
+    (next: Language) => {
+      setLanguageState(next);
+      onLanguageChange?.(next);
+    },
+    [onLanguageChange],
   );
 
   const value = useMemo<I18n>(
     () => ({ language, setLanguage, t: (key, params) => translate(language, key, params) }),
-    [language],
+    [language, setLanguage],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
