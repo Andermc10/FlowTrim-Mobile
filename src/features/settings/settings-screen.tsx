@@ -1,7 +1,7 @@
 // Ajustes (HU-84): cuenta, idioma, tema, bloqueo, versión, privacidad y cerrar sesión.
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useAuth } from '@/core/auth/auth-provider';
@@ -11,6 +11,7 @@ import { useAppLock } from '@/core/lock/app-lock';
 import { useTheme, type ThemePreference } from '@/core/theme/theme';
 import { minTouchTarget } from '@/core/theme/tokens';
 import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
 import { ChoiceGroup } from '@/shared/ui/choice-group';
 
 export const PRIVACY_URL = 'https://github.com/Andermc10/FlowTrim-Mobile#security-and-privacy';
@@ -20,27 +21,6 @@ const languageChoices = [
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Español' },
 ] as const satisfies readonly { value: Language; label: string }[];
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  const { colors, radius, spacing, typography } = useTheme();
-  return (
-    <View
-      style={{
-        backgroundColor: colors.surface,
-        borderColor: colors.border,
-        borderWidth: 1,
-        borderRadius: radius.lg,
-        padding: spacing.lg,
-        gap: spacing.md,
-      }}
-    >
-      <Text accessibilityRole="header" style={[typography.title, { color: colors.text }]}>
-        {title}
-      </Text>
-      {children}
-    </View>
-  );
-}
 
 export function SettingsScreen() {
   const theme = useTheme();
@@ -72,7 +52,7 @@ export function SettingsScreen() {
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg }}
     >
-      <Section title={t('settings.account')}>
+      <Card title={t('settings.account')}>
         <Text style={[typography.body, { color: colors.text }]}>
           {email ? t('settings.signedInAs', { email }) : t('settings.signedIn')}
         </Text>
@@ -83,9 +63,9 @@ export function SettingsScreen() {
           onPress={signOut}
         />
         <Text style={[typography.caption, { color: colors.muted }]}>{t('settings.signOutHint')}</Text>
-      </Section>
+      </Card>
 
-      <Section title={t('settings.preferences')}>
+      <Card title={t('settings.preferences')}>
         <ChoiceGroup
           label={t('settings.language')}
           choices={languageChoices}
@@ -98,9 +78,9 @@ export function SettingsScreen() {
           selected={theme.preference}
           onSelect={theme.setPreference}
         />
-      </Section>
+      </Card>
 
-      <Section title={t('settings.security')}>
+      <Card title={t('settings.security')}>
         <View style={[styles.switchRow, { gap: spacing.md }]}>
           <Text style={[typography.body, styles.switchLabel, { color: colors.text }]}>
             {t('settings.lock')}
@@ -127,9 +107,9 @@ export function SettingsScreen() {
             {lockMessage}
           </Text>
         ) : null}
-      </Section>
+      </Card>
 
-      <Section title={t('settings.about')}>
+      <Card title={t('settings.about')}>
         <Text style={[typography.body, { color: colors.text }]}>{t('settings.version', { version })}</Text>
         <Button
           label={t('settings.privacy')}
@@ -138,7 +118,7 @@ export function SettingsScreen() {
           // Navegador del sistema (Custom Tabs), nunca un WebView dentro de la app (spec §13, MASVS-PLATFORM).
           onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_URL)}
         />
-      </Section>
+      </Card>
     </ScrollView>
   );
 }
