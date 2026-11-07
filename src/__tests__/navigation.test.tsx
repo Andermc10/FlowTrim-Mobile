@@ -12,6 +12,7 @@ import {
   createMemoryStorage,
   validSession,
 } from '@/testing/test-doubles';
+import { emptyToday, installFakeApi } from '@/testing/fake-api';
 
 jest.mock('expo-localization', () => ({ getLocales: jest.fn() }));
 
@@ -32,6 +33,8 @@ function deviceLanguage(languageCode: string) {
 
 beforeEach(async () => {
   jest.clearAllMocks();
+  // Today pide datos al abrir: API simulada sin cuentas (la pantalla muestra la guía).
+  installFakeApi({ 'GET /api/dashboard/today': { body: emptyToday() } });
   await AsyncStorage.clear();
   deviceLanguage('en');
   mockStorage.set(null);
@@ -49,7 +52,7 @@ describe('signed in', () => {
     for (const label of ['Today', 'Movements', 'Payments', 'Plan']) {
       expect((await screen.findAllByText(label)).length).toBeGreaterThan(0);
     }
-    expect(screen.getByText('Your safe-to-spend estimate will appear here.')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Add your first account' })).toBeOnTheScreen();
   });
 
   it('paymentsRoute_SpanishDevice_ShowsSpanishTexts', async () => {
@@ -86,7 +89,7 @@ describe('signed out', () => {
 
     await fireEvent.press(await screen.findByRole('button', { name: 'Sign in' }));
 
-    expect(await screen.findByText('Your safe-to-spend estimate will appear here.')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Add your first account' })).toBeOnTheScreen();
     expect(mockStorage.current()).toContain('test-access-token');
   });
 
@@ -165,7 +168,7 @@ describe('app lock (HU-84)', () => {
     Object.assign(mockLockDevice.state, { enabled: true, authenticates: true });
     await renderRouter('./src/app', { initialUrl: '/' });
 
-    expect(await screen.findByText('Your safe-to-spend estimate will appear here.')).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Add your first account' })).toBeOnTheScreen();
     expect(screen.queryByRole('header', { name: 'FlowTrim is locked' })).toBeNull();
   });
 });

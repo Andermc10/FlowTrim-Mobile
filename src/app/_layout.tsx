@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ApiProvider } from '@/core/api/api-provider';
 import { createQueryClient } from '@/core/api/query-client';
+import { useRefetchOnAppFocus } from '@/core/api/query-focus';
 import { AuthProvider, useAuth } from '@/core/auth/auth-provider';
 import { createAuthService } from '@/core/auth/auth-service';
 import { secureTokenStorage } from '@/core/auth/token-store';
@@ -152,6 +153,8 @@ function PreferencesGate({
 export default function RootLayout() {
   // Un solo caché para toda la app; useState garantiza que no se recree en cada render.
   const [queryClient] = useState(createQueryClient);
+  // Al volver al primer plano se recargan los datos vencidos (Today, movimientos…).
+  useRefetchOnAppFocus();
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
