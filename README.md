@@ -5,7 +5,8 @@ personal-finance engine. Built with **React Native + Expo + TypeScript**, it con
 [FlowTrim API](https://github.com/Andermc10/FlowTrim-backend) without any backend change.
 
 > **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client, HU-83 native
-> sign-in, HU-84 settings and app lock, HU-85 Today and HU-86 quick add + Movements. Screens arrive story by story;
+> sign-in, HU-84 settings and app lock, HU-85 Today, HU-86 quick add + Movements and HU-87 recurring payments with
+> mark as paid. Screens arrive story by story;
 > see the epic spec [`EP-17-flowtrim-mobile.md`](https://github.com/Andermc10/FlowTrim-tracker/blob/main/specs/EP-17-flowtrim-mobile.md).
 
 ## What it will do (and what it won't)
@@ -110,8 +111,9 @@ on cold start and after more than 60 s in the background; the "on" flag lives in
 sign-out; while the lock is on, `FLAG_SECURE` (`expo-screen-capture`) blanks the recent-apps preview and blocks
 screenshots. Permissions the app does not use are removed from the manifest (`READ_EXTERNAL_STORAGE`,
 `READ_MEDIA_IMAGES`, `DETECT_SCREEN_CAPTURE`). AsyncStorage holds only non-sensitive values: language, theme and
-the id of the last account used in quick add (HU-86, to preselect it). Coming with their stories: private
-notifications.
+the id of the last account used in quick add (HU-86, to preselect it). "Pay at provider ↗" (HU-87) opens only
+`https://` links without credentials, in the system browser (never an in-app WebView). Coming with their stories:
+private notifications.
 
 | Stored where                      | What                                                          |
 | --------------------------------- | ------------------------------------------------------------- |
