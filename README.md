@@ -6,7 +6,7 @@ personal-finance engine. Built with **React Native + Expo + TypeScript**, it con
 
 > **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client, HU-83 native
 > sign-in, HU-84 settings and app lock, HU-85 Today, HU-86 quick add + Movements, HU-87 recurring payments with
-> mark as paid and HU-88 budgets and goals. Screens arrive story by story;
+> mark as paid, HU-88 budgets and goals and HU-89 local payment reminders. Screens arrive story by story;
 > see the epic spec [`EP-17-flowtrim-mobile.md`](https://github.com/Andermc10/FlowTrim-tracker/blob/main/specs/EP-17-flowtrim-mobile.md).
 
 ## What it will do (and what it won't)
@@ -110,15 +110,21 @@ App lock and settings (HU-84): optional fingerprint/PIN lock (`expo-local-authen
 on cold start and after more than 60 s in the background; the "on" flag lives in SecureStore and is cleared on
 sign-out; while the lock is on, `FLAG_SECURE` (`expo-screen-capture`) blanks the recent-apps preview and blocks
 screenshots. Permissions the app does not use are removed from the manifest (`READ_EXTERNAL_STORAGE`,
-`READ_MEDIA_IMAGES`, `DETECT_SCREEN_CAPTURE`). AsyncStorage holds only non-sensitive values: language, theme and
-the id of the last account used in quick add (HU-86, to preselect it). "Pay at provider ↗" (HU-87) opens only
-`https://` links without credentials, in the system browser (never an in-app WebView). Coming with their stories:
-private notifications.
+`READ_MEDIA_IMAGES`, `DETECT_SCREEN_CAPTURE`). AsyncStorage holds only non-sensitive values: language, theme, the
+id of the last account used in quick add (HU-86, to preselect it) and the reminders on/off flag (HU-89). "Pay at provider ↗" (HU-87) opens only
+`https://` links without credentials, in the system browser (never an in-app WebView).
+
+Reminders (HU-89, opt-in): local notifications scheduled on the phone with `expo-notifications` at 09:00 the day
+before and on the day of each expected charge in the next 14 days (overdue: one at the next 09:00; at most 30). The
+notification permission (`POST_NOTIFICATIONS`, Android 13+) is requested only when the user turns them on;
+`RECEIVE_BOOT_COMPLETED` keeps them after a reboot. They use a **private** channel, so Android hides the amount on the
+lock screen. Turning them off or signing out cancels every scheduled reminder. Nothing is sent by e-mail or push.
 
 | Stored where                      | What                                                          |
 | --------------------------------- | ------------------------------------------------------------- |
 | SecureStore (Android Keystore)    | session tokens, account e-mail, lock on/off                   |
-| AsyncStorage                      | language and theme preferences, last quick-add account id     |
+| Android alarm manager             | scheduled reminders (name and amount of the expected charge)  |
+| AsyncStorage                      | language, theme, last quick-add account id, reminders on/off  |
 | Memory only (cleared on sign-out) | API data cache (persisted read-only cache arrives with HU-90) |
 
 ## Process
