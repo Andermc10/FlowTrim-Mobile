@@ -5,8 +5,8 @@ personal-finance engine. Built with **React Native + Expo + TypeScript**, it con
 [FlowTrim API](https://github.com/Andermc10/FlowTrim-backend) without any backend change.
 
 > **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client, HU-83 native
-> sign-in, HU-84 settings and app lock, HU-85 Today, HU-86 quick add + Movements and HU-87 recurring payments with
-> mark as paid. Screens arrive story by story;
+> sign-in, HU-84 settings and app lock, HU-85 Today, HU-86 quick add + Movements, HU-87 recurring payments with
+> mark as paid and HU-88 budgets and goals. Screens arrive story by story;
 > see the epic spec [`EP-17-flowtrim-mobile.md`](https://github.com/Andermc10/FlowTrim-tracker/blob/main/specs/EP-17-flowtrim-mobile.md).
 
 ## What it will do (and what it won't)

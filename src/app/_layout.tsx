@@ -76,6 +76,11 @@ function ProtectedStack() {
             name="mark-paid/[id]"
             options={{ headerShown: true, presentation: 'modal', title: t('markPaid.title') }}
           />
+          {/* Aportar o retirar de una meta (HU-88). */}
+          <Stack.Screen
+            name="goal-contribution/[id]"
+            options={{ headerShown: true, presentation: 'modal', title: t('plan.contribution.title') }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="welcome" />
