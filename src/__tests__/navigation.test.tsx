@@ -57,10 +57,14 @@ describe('signed in', () => {
 
   it('paymentsRoute_SpanishDevice_ShowsSpanishTexts', async () => {
     deviceLanguage('es');
+    installFakeApi({
+      'GET /api/subscriptions/upcoming': { body: { referenceDate: '2026-11-06', items: [] } },
+      'GET /api/subscriptions': { body: { items: [], page: 1, pageSize: 100, totalCount: 0 } },
+    });
 
     await renderRouter('./src/app', { initialUrl: '/payments' });
 
-    expect(await screen.findByRole('header', { name: 'Pagos recurrentes' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'No hay pagos recurrentes activos' })).toBeOnTheScreen();
     expect(screen.getAllByText('Movimientos').length).toBeGreaterThan(0);
   });
 
