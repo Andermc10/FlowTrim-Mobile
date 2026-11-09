@@ -3,6 +3,8 @@ import type { AuthService, SignInResult } from '@/core/auth/auth-service';
 import type { StoredSession } from '@/core/auth/session';
 import type { TokenStorage } from '@/core/auth/token-manager';
 import type { LockDevice } from '@/core/lock/lock-device';
+import type { Reminder } from '@/core/reminders/plan-reminders';
+import type { ReminderDevice, ReminderPermission } from '@/core/reminders/reminder-device';
 
 export const validSession = (): StoredSession => ({
   accessToken: 'test-access-token',
@@ -72,6 +74,51 @@ export function createFakeLockDevice(options: FakeLockOptions = {}) {
       state.offered = true;
     }),
     protectScreen: jest.fn(async () => undefined),
+  };
+  return device;
+}
+
+// Teléfono simulado para los recordatorios: permiso, lo programado y lo guardado, sin notificaciones reales.
+export function createFakeReminderDevice() {
+  const state = {
+    permission: 'granted' as ReminderPermission,
+    /** Respuesta del diálogo del sistema al pedir el permiso. */
+    grantsOnRequest: true,
+    enabled: false,
+    offered: true,
+    scheduled: [] as Reminder[],
+  };
+  let openListener: ((subscriptionId: string | null) => void) | null = null;
+  const device: ReminderDevice & { state: typeof state; open: (subscriptionId: string) => void } = {
+    state,
+    prepare: jest.fn(),
+    permission: jest.fn(async () => state.permission),
+    requestPermission: jest.fn(async () => {
+      state.permission = state.grantsOnRequest ? 'granted' : 'denied';
+      return state.permission;
+    }),
+    replaceAll: jest.fn(async (reminders: readonly Reminder[]) => {
+      state.scheduled = [...reminders];
+    }),
+    cancelAll: jest.fn(async () => {
+      state.scheduled = [];
+    }),
+    loadEnabled: jest.fn(async () => state.enabled),
+    saveEnabled: jest.fn(async (enabled: boolean) => {
+      state.enabled = enabled;
+    }),
+    loadOffered: jest.fn(async () => state.offered),
+    saveOffered: jest.fn(async (offered: boolean) => {
+      state.offered = offered;
+    }),
+    onOpen: jest.fn((listener: (subscriptionId: string | null) => void) => {
+      openListener = listener;
+      return () => {
+        openListener = null;
+      };
+    }),
+    // Simula que el usuario toca un recordatorio.
+    open: (subscriptionId: string) => openListener?.(subscriptionId),
   };
   return device;
 }

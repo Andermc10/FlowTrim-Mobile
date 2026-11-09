@@ -18,6 +18,8 @@ import type { Language } from '@/core/i18n/translations';
 import { AppLockProvider, useAppLock } from '@/core/lock/app-lock';
 import { nativeLockDevice } from '@/core/lock/lock-device';
 import { loadPreferences, savePreferences, type Preferences } from '@/core/preferences/preferences';
+import { nativeReminderDevice } from '@/core/reminders/reminder-device';
+import { RemindersProvider } from '@/core/reminders/reminders';
 import { ThemeProvider, useTheme, type ThemePreference } from '@/core/theme/theme';
 import { LockScreen } from '@/features/lock/lock-screen';
 import { StatusScreen } from '@/shared/ui/status-screen';
@@ -116,7 +118,9 @@ function SessionRoot({ config }: { config: AppConfig }) {
     <AuthProvider service={service} storage={secureTokenStorage}>
       <AppLockProvider device={nativeLockDevice}>
         <ApiProvider baseUrl={config.apiUrl}>
-          <ProtectedStack />
+          <RemindersProvider device={nativeReminderDevice}>
+            <ProtectedStack />
+          </RemindersProvider>
         </ApiProvider>
       </AppLockProvider>
     </AuthProvider>

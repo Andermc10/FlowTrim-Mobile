@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '@/core/i18n/i18n';
 import { useTheme } from '@/core/theme/theme';
 import { minTouchTarget } from '@/core/theme/tokens';
+import { ReminderSync } from '@/features/payments/reminder-sync';
 
 // Acceso a Ajustes desde el encabezado de Today (spec §4); zona táctil mínima y nombre accesible.
 function SettingsLink() {
@@ -59,6 +60,8 @@ export default function TabsLayout() {
     <View style={styles.container}>
       <TabsNavigator />
       <QuickAddButton />
+      {/* Recordatorios locales (HU-89): se reprograman con cada carga de los próximos cobros. */}
+      <ReminderSync />
     </View>
   );
 }

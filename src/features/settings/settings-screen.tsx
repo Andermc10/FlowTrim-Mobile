@@ -8,6 +8,7 @@ import { useAuth } from '@/core/auth/auth-provider';
 import { useI18n } from '@/core/i18n/i18n';
 import type { Language } from '@/core/i18n/translations';
 import { useAppLock } from '@/core/lock/app-lock';
+import { useReminders } from '@/core/reminders/reminders';
 import { useTheme, type ThemePreference } from '@/core/theme/theme';
 import { minTouchTarget } from '@/core/theme/tokens';
 import { Button } from '@/shared/ui/button';
@@ -28,6 +29,7 @@ export function SettingsScreen() {
   const { t, language, setLanguage } = useI18n();
   const { signOut, email } = useAuth();
   const lock = useAppLock();
+  const reminders = useReminders();
   const [lockMessage, setLockMessage] = useState<string | null>(null);
 
   const lockUnavailable = lock.availability === 'notEnrolled';
@@ -105,6 +107,30 @@ export function SettingsScreen() {
         {lockMessage ? (
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.danger }]}>
             {lockMessage}
+          </Text>
+        ) : null}
+      </Card>
+
+      <Card title={t('settings.reminders')}>
+        <View style={[styles.switchRow, { gap: spacing.md }]}>
+          <Text style={[typography.body, styles.switchLabel, { color: colors.text }]}>
+            {t('settings.remindersToggle')}
+          </Text>
+          <Switch
+            accessibilityLabel={t('settings.remindersToggle')}
+            accessibilityHint={t('settings.remindersHint')}
+            value={reminders.enabled === true}
+            disabled={reminders.enabled === null}
+            accessibilityState={{ disabled: reminders.enabled === null }}
+            onValueChange={(next) => void reminders.setEnabled(next)}
+            trackColor={{ true: colors.primary, false: colors.borderStrong }}
+          />
+        </View>
+        <Text style={[typography.caption, { color: colors.muted }]}>{t('settings.remindersHint')}</Text>
+        {reminders.denied ? (
+          // Permiso negado: el interruptor queda apagado y se explica dónde cambiarlo (spec §8).
+          <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.danger }]}>
+            {t('settings.remindersDenied')}
           </Text>
         ) : null}
       </Card>

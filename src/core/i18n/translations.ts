@@ -240,6 +240,22 @@ const en = {
   'plan.contribution.save': 'Save',
   'plan.contribution.savedDeposit': 'Contribution saved.',
   'plan.contribution.savedWithdrawal': 'Withdrawal saved.',
+  'reminders.channel': 'Payment reminders',
+  'reminders.title.tomorrow': 'Expected charge tomorrow',
+  'reminders.title.today': 'Expected charge today',
+  'reminders.title.overdue': 'Overdue expected charge',
+  'reminders.body': '{name} · {amount}',
+  'reminders.offer.title': 'Remind you of upcoming charges?',
+  'reminders.offer.message':
+    'FlowTrim can remind you on this phone at 09:00 the day before and on the day of each expected charge. Nothing is sent by e-mail. You can change it later in Settings.',
+  'reminders.offer.enable': 'Turn on',
+  'reminders.offer.later': 'Not now',
+  'settings.reminders': 'Reminders',
+  'settings.remindersToggle': 'Remind me of expected charges',
+  'settings.remindersHint':
+    'Local notifications on this phone at 09:00, the day before and on the day of each expected charge in the next 14 days. Amounts are hidden on the lock screen; nothing is sent by e-mail.',
+  'settings.remindersDenied':
+    'Notifications are blocked for FlowTrim. Allow them in your phone settings (Apps › FlowTrim › Notifications) and try again.',
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -485,6 +501,22 @@ const es: Record<TranslationKey, string> = {
   'plan.contribution.save': 'Guardar',
   'plan.contribution.savedDeposit': 'Aporte guardado.',
   'plan.contribution.savedWithdrawal': 'Retiro guardado.',
+  'reminders.channel': 'Recordatorios de pagos',
+  'reminders.title.tomorrow': 'Cargo esperado mañana',
+  'reminders.title.today': 'Cargo esperado hoy',
+  'reminders.title.overdue': 'Cargo esperado vencido',
+  'reminders.body': '{name} · {amount}',
+  'reminders.offer.title': '¿Te recordamos los próximos cargos?',
+  'reminders.offer.message':
+    'FlowTrim puede avisarte en este teléfono a las 09:00 el día antes y el día de cada cargo esperado. No se envía nada por correo. Puedes cambiarlo después en Ajustes.',
+  'reminders.offer.enable': 'Activar',
+  'reminders.offer.later': 'Ahora no',
+  'settings.reminders': 'Recordatorios',
+  'settings.remindersToggle': 'Recordarme los cargos esperados',
+  'settings.remindersHint':
+    'Notificaciones locales en este teléfono a las 09:00, el día antes y el día de cada cargo esperado de los próximos 14 días. Los importes se ocultan en la pantalla de bloqueo; no se envía nada por correo.',
+  'settings.remindersDenied':
+    'Las notificaciones de FlowTrim están bloqueadas. Permítelas en los ajustes del teléfono (Aplicaciones › FlowTrim › Notificaciones) e inténtalo de nuevo.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = { en, es };

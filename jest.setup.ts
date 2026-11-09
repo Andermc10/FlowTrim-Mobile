@@ -8,3 +8,9 @@ process.env.EXPO_PUBLIC_AUTH0_AUDIENCE = 'https://api.example.test';
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+
+// Recordatorios: ninguna prueba toca notificaciones reales. Cada archivo recibe un teléfono simulado nuevo;
+// las pruebas que lo necesitan lo leen con jest.requireMock('@/core/reminders/reminder-device').
+jest.mock('@/core/reminders/reminder-device', () => ({
+  nativeReminderDevice: require('@/testing/test-doubles').createFakeReminderDevice(),
+}));
