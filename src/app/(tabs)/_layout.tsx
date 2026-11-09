@@ -1,6 +1,7 @@
 // Barra de pestañas inferior: Today · Movements · Payments · Plan (spec EP-17 §4).
 import { Link, Tabs } from 'expo-router';
-import { Pressable, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useI18n } from '@/core/i18n/i18n';
 import { useTheme } from '@/core/theme/theme';
@@ -25,7 +26,44 @@ function SettingsLink() {
   );
 }
 
+// Botón "+" flotante sobre la barra de pestañas (spec §4): abre el registro rápido desde cualquier pestaña.
+function QuickAddButton() {
+  const { colors, radius, spacing } = useTheme();
+  const { t } = useI18n();
+  const insets = useSafeAreaInsets();
+  return (
+    <Link href="/quick-add" asChild>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('quickAdd.open')}
+        style={({ pressed }) => [
+          styles.fab,
+          {
+            // Altura de la barra de pestañas + margen: nunca tapa las etiquetas de las pestañas.
+            bottom: insets.bottom + minTouchTarget + 12 + spacing.md,
+            right: spacing.lg,
+            borderRadius: radius.pill,
+            backgroundColor: colors.primary,
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+      >
+        <Text style={[styles.fabText, { color: colors.onPrimary }]}>+</Text>
+      </Pressable>
+    </Link>
+  );
+}
+
 export default function TabsLayout() {
+  return (
+    <View style={styles.container}>
+      <TabsNavigator />
+      <QuickAddButton />
+    </View>
+  );
+}
+
+function TabsNavigator() {
   const { colors } = useTheme();
   const { t } = useI18n();
 
@@ -50,3 +88,16 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  fab: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+  },
+  fabText: { fontSize: 30, lineHeight: 34, fontWeight: '600' },
+});
