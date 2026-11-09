@@ -71,6 +71,11 @@ function ProtectedStack() {
             name="quick-add"
             options={{ headerShown: true, presentation: 'modal', title: t('quickAdd.title') }}
           />
+          {/* Marcar como pagado (HU-87): misma hoja modal, sobre la pestaña Pagos. */}
+          <Stack.Screen
+            name="mark-paid/[id]"
+            options={{ headerShown: true, presentation: 'modal', title: t('markPaid.title') }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="welcome" />
