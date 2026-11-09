@@ -66,6 +66,11 @@ function ProtectedStack() {
         <Stack.Protected guard={signedIn}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="settings" options={{ headerShown: true, title: t('settings.title') }} />
+          {/* Registro rápido: hoja modal que sube sobre las pestañas y se cierra al guardar (HU-86). */}
+          <Stack.Screen
+            name="quick-add"
+            options={{ headerShown: true, presentation: 'modal', title: t('quickAdd.title') }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="welcome" />
