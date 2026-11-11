@@ -9,6 +9,8 @@ import { errorMessage } from '@/core/api/error-message';
 import { formatMoney } from '@/core/format/money';
 import { productToday, shiftDays } from '@/core/format/product-calendar';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineSaveNotice } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { Button } from '@/shared/ui/button';
 import { ChoiceGroup } from '@/shared/ui/choice-group';
@@ -33,6 +35,8 @@ function ContributionForm({ goal, today }: { goal: Goal; today: string }) {
   const { t, language } = useI18n();
   const router = useRouter();
   const add = useAddContribution(goal.id);
+  // Sin red no se guarda ni se encola nada (HU-90 FR-2).
+  const online = useOnline();
   const [draft, setDraft] = useState<ContributionDraft>({
     kind: 'deposit',
     amount: '',
@@ -154,7 +158,13 @@ function ContributionForm({ goal, today }: { goal: Goal; today: string }) {
         </View>
       ) : null}
 
-      <Button label={t('plan.contribution.save')} onPress={submit} loading={add.isPending} />
+      {online ? null : <OfflineSaveNotice />}
+      <Button
+        label={t('plan.contribution.save')}
+        onPress={submit}
+        loading={add.isPending}
+        disabled={!online}
+      />
     </ScrollView>
   );
 }
@@ -164,9 +174,14 @@ export function ContributionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [today] = useState(() => productToday());
   const goal = useGoal(id);
+  const online = useOnline();
 
   if (goal.isPending) {
-    return <StatusScreen busy message={t('plan.loading')} />;
+    return online ? (
+      <StatusScreen busy message={t('plan.loading')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.cannotSave')} />
+    );
   }
   if (goal.isError) {
     return (

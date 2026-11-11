@@ -7,6 +7,8 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { formatDate, formatMoney } from '@/core/format/money';
 import { monthOf, monthTitle, productToday } from '@/core/format/product-calendar';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineBanner } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { budgetStateKey } from '@/features/today/today-view';
 import { Button } from '@/shared/ui/button';
@@ -145,9 +147,14 @@ export function PlanScreen() {
   const [month] = useState(() => monthOf(productToday()));
   const budgets = useBudgets(month);
   const goals = useGoals();
+  const online = useOnline();
 
   if (budgets.isPending || goals.isPending) {
-    return <StatusScreen busy message={t('plan.loading')} />;
+    return online ? (
+      <StatusScreen busy message={t('plan.loading')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.noCopy')} />
+    );
   }
   // Sin datos tras cargar = falló una de las dos consultas: se muestra el error y se reintenta esa.
   const budgetList = budgets.data;
@@ -176,6 +183,8 @@ export function PlanScreen() {
         />
       }
     >
+      {/* La hora más antigua de las dos consultas: así nunca se muestra una copia como más nueva de lo que es. */}
+      <OfflineBanner updatedAt={Math.min(budgets.dataUpdatedAt, goals.dataUpdatedAt)} />
       <Card title={t('plan.budgets', { month: monthTitle(month, language) })}>
         {budgetList.items.length === 0 ? (
           <Text style={[typography.body, { color: colors.muted }]}>{t('plan.budgets.empty')}</Text>

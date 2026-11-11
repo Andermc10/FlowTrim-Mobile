@@ -14,6 +14,8 @@ import {
 import { formatDate, formatMoney } from '@/core/format/money';
 import { monthOf, monthTitle, productToday, shiftMonth } from '@/core/format/product-calendar';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineBanner } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { minTouchTarget } from '@/core/theme/tokens';
 import { Button } from '@/shared/ui/button';
@@ -211,6 +213,7 @@ export function MovementsScreen() {
   const [filter, setFilter] = useState<MovementsFilter>({ month: currentMonth, accountId: null, type: null });
   const [showFilters, setShowFilters] = useState(false);
   const movements = useMovements(filter);
+  const online = useOnline();
   const accounts = useAccounts();
 
   const pages = movements.data?.pages;
@@ -221,6 +224,7 @@ export function MovementsScreen() {
 
   const header = (
     <View style={{ gap: spacing.md, paddingBottom: spacing.md }}>
+      <OfflineBanner updatedAt={movements.dataUpdatedAt} />
       <MonthSelector month={filter.month} current={currentMonth} onChange={(month) => change({ month })} />
       <Pressable
         accessibilityRole="button"
@@ -241,7 +245,11 @@ export function MovementsScreen() {
 
   let body: ReactElement | null = null;
   if (movements.isPending) {
-    body = <StatusScreen busy message={t('movements.loading')} />;
+    body = online ? (
+      <StatusScreen busy message={t('movements.loading')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.noCopy')} />
+    );
   } else if (movements.isError && !movements.data) {
     body = (
       <ErrorState

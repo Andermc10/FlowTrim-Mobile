@@ -6,6 +6,8 @@ import { FlatList, Linking, RefreshControl, StyleSheet, Text, View } from 'react
 
 import { formatDate, formatMoney } from '@/core/format/money';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineBanner } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -104,6 +106,7 @@ export function PaymentsScreen() {
   const { t } = useI18n();
   const upcoming = useUpcomingCharges();
   const subscriptions = useSubscriptions();
+  const online = useOnline();
 
   // Si el detalle falla, la lista igual se muestra (sin tipo, cuotas ni enlace): lo esencial es la fecha y el importe.
   const payments = useMemo(
@@ -111,7 +114,15 @@ export function PaymentsScreen() {
     [upcoming.data, subscriptions.data],
   );
 
-  if (upcoming.isPending || (subscriptions.isPending && !subscriptions.isError)) {
+  if (upcoming.isPending) {
+    return online ? (
+      <StatusScreen busy message={t('payments.loading')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.noCopy')} />
+    );
+  }
+  // Sin red el detalle puede no estar en la copia: la lista se muestra igual (sin tipo, cuotas ni enlace).
+  if (subscriptions.isPending && !subscriptions.isError && online) {
     return <StatusScreen busy message={t('payments.loading')} />;
   }
   if (upcoming.isError && !upcoming.data) {
@@ -138,7 +149,10 @@ export function PaymentsScreen() {
       keyExtractor={(payment) => payment.charge.id}
       renderItem={({ item }) => <PaymentCard payment={item} />}
       ListHeaderComponent={
-        <Text style={[typography.caption, { color: colors.muted }]}>{t('payments.note')}</Text>
+        <View style={{ gap: spacing.md }}>
+          <OfflineBanner updatedAt={upcoming.dataUpdatedAt} />
+          <Text style={[typography.caption, { color: colors.muted }]}>{t('payments.note')}</Text>
+        </View>
       }
       ListEmptyComponent={
         <Card title={t('payments.empty.title')}>
