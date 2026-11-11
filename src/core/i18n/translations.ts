@@ -256,6 +256,12 @@ const en = {
     'Local notifications on this phone at 09:00, the day before and on the day of each expected charge in the next 14 days. Amounts are hidden on the lock screen; nothing is sent by e-mail.',
   'settings.remindersDenied':
     'Notifications are blocked for FlowTrim. Allow them in your phone settings (Apps › FlowTrim › Notifications) and try again.',
+  'offline.title': "You're offline",
+  'offline.noCopy': 'There is no saved copy of this screen yet. Connect to load it.',
+  'offline.banner': 'Offline · last updated {time}',
+  'offline.bannerNoTime': 'Offline',
+  'offline.readOnly': 'Showing the copy saved on this phone. Nothing can be saved until you connect.',
+  'offline.cannotSave': "You're offline — connect to save.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -517,6 +523,13 @@ const es: Record<TranslationKey, string> = {
     'Notificaciones locales en este teléfono a las 09:00, el día antes y el día de cada cargo esperado de los próximos 14 días. Los importes se ocultan en la pantalla de bloqueo; no se envía nada por correo.',
   'settings.remindersDenied':
     'Las notificaciones de FlowTrim están bloqueadas. Permítelas en los ajustes del teléfono (Aplicaciones › FlowTrim › Notificaciones) e inténtalo de nuevo.',
+  'offline.title': 'Sin conexión',
+  'offline.noCopy': 'Todavía no hay una copia guardada de esta pantalla. Conéctate para cargarla.',
+  'offline.banner': 'Sin conexión · actualizado {time}',
+  'offline.bannerNoTime': 'Sin conexión',
+  'offline.readOnly':
+    'Se muestra la copia guardada en este teléfono. No se puede guardar nada hasta que te conectes.',
+  'offline.cannotSave': 'Sin conexión: conéctate para guardar.',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = { en, es };

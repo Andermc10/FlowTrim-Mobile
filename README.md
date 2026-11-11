@@ -6,7 +6,8 @@ personal-finance engine. Built with **React Native + Expo + TypeScript**, it con
 
 > **Status:** HU-81 foundation (tabs, theme, languages, configuration, CI), HU-82 typed API client, HU-83 native
 > sign-in, HU-84 settings and app lock, HU-85 Today, HU-86 quick add + Movements, HU-87 recurring payments with
-> mark as paid, HU-88 budgets and goals and HU-89 local payment reminders. Screens arrive story by story;
+> mark as paid, HU-88 budgets and goals, HU-89 local payment reminders and HU-90 read-only offline. Screens arrive
+> story by story;
 > see the epic spec [`EP-17-flowtrim-mobile.md`](https://github.com/Andermc10/FlowTrim-tracker/blob/main/specs/EP-17-flowtrim-mobile.md).
 
 ## What it will do (and what it won't)
@@ -120,12 +121,19 @@ notification permission (`POST_NOTIFICATIONS`, Android 13+) is requested only wh
 `RECEIVE_BOOT_COMPLETED` keeps them after a reboot. They use a **private** channel, so Android hides the amount on the
 lock screen. Turning them off or signing out cancels every scheduled reminder. Nothing is sent by e-mail or push.
 
-| Stored where                      | What                                                          |
-| --------------------------------- | ------------------------------------------------------------- |
-| SecureStore (Android Keystore)    | session tokens, account e-mail, lock on/off                   |
-| Android alarm manager             | scheduled reminders (name and amount of the expected charge)  |
-| AsyncStorage                      | language, theme, last quick-add account id, reminders on/off  |
-| Memory only (cleared on sign-out) | API data cache (persisted read-only cache arrives with HU-90) |
+Offline (HU-90, read-only): the last loaded Today, recurring payments, current-month movements, budgets and goals are
+saved in AsyncStorage (inside the app sandbox, TanStack Query persister, valid for 7 days) and shown with an
+"Offline · last updated <time>" banner. Accounts, categories and details used only to write are not saved. Without
+a connection every save button is disabled and nothing is queued; when the connection returns everything on screen is
+reloaded. Signing out removes the saved copy.
+
+| Stored where                       | What                                                         |
+| ---------------------------------- | ------------------------------------------------------------ |
+| SecureStore (Android Keystore)     | session tokens, account e-mail, lock on/off                  |
+| Android alarm manager              | scheduled reminders (name and amount of the expected charge) |
+| AsyncStorage                       | language, theme, last quick-add account id, reminders on/off |
+| AsyncStorage (cleared on sign-out) | read-only copy of the screens listed above (7 days)          |
+| Memory only (cleared on sign-out)  | API data cache                                               |
 
 ## Process
 

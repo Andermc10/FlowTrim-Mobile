@@ -14,3 +14,6 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 jest.mock('@/core/reminders/reminder-device', () => ({
   nativeReminderDevice: require('@/testing/test-doubles').createFakeReminderDevice(),
 }));
+
+// Red simulada: conectada por defecto; las pruebas sin conexion usan setNetworkConnected de src/testing/network.
+jest.mock('@react-native-community/netinfo', () => require('@/testing/network').fakeNetInfoModule);

@@ -9,6 +9,8 @@ import { errorMessage } from '@/core/api/error-message';
 import { formatDate, formatMoney } from '@/core/format/money';
 import { productToday, shiftDays } from '@/core/format/product-calendar';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineSaveNotice } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { categoriesFor, type Account, type Category } from '@/features/movements/movements-view';
 import { useAccounts, useCategories } from '@/features/movements/use-movements';
@@ -74,6 +76,8 @@ function MarkPaidForm({
   const { colors, spacing, typography } = useTheme();
   const { t, language } = useI18n();
   const markPaid = useMarkPaid(payment.id);
+  // Sin red no se guarda ni se encola nada (HU-90 FR-2).
+  const online = useOnline();
   const options = useMemo(() => accountsForPayment(payment, accounts), [payment, accounts]);
   const expenseCategories = useMemo(() => categoriesFor('Expense', categories, new Map()), [categories]);
   const [draft, setDraft] = useState<MarkPaidDraft>(() => initialDraft(payment, accounts, categories, today));
@@ -212,10 +216,12 @@ function MarkPaidForm({
         </View>
       ) : null}
 
+      {online ? null : <OfflineSaveNotice />}
       <Button
         label={recording ? t('markPaid.submitRecord') : t('markPaid.submitDateOnly')}
         onPress={submit}
         loading={markPaid.isPending}
+        disabled={!online}
       />
     </ScrollView>
   );
@@ -229,6 +235,7 @@ export function MarkPaidScreen() {
   const payment = useSubscription(id);
   const accounts = useAccounts();
   const categories = useCategories();
+  const online = useOnline();
 
   if (payment.isError) {
     return (
@@ -240,7 +247,11 @@ export function MarkPaidScreen() {
     );
   }
   if (payment.isPending || accounts.isPending || categories.isPending) {
-    return <StatusScreen busy message={t('markPaid.loading')} />;
+    return online ? (
+      <StatusScreen busy message={t('markPaid.loading')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.cannotSave')} />
+    );
   }
   // Sin cuentas o categorías (fallo de carga) solo queda "mover la fecha", como en la web.
   return (

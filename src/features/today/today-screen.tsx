@@ -5,6 +5,8 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 
 import { formatDate, formatMoney } from '@/core/format/money';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineBanner } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { minTouchTarget } from '@/core/theme/tokens';
 import { Card } from '@/shared/ui/card';
@@ -188,9 +190,15 @@ export function TodayScreen() {
   const { colors, spacing, typography } = useTheme();
   const { t } = useI18n();
   const today = useToday();
+  const online = useOnline();
 
   if (today.isPending) {
-    return <StatusScreen busy message={t('session.restoring')} />;
+    // Sin red y sin copia local no hay nada que mostrar todavía (HU-90).
+    return online ? (
+      <StatusScreen busy message={t('session.restoring')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.noCopy')} />
+    );
   }
   if (today.isError && !today.data) {
     return (
@@ -215,6 +223,7 @@ export function TodayScreen() {
         />
       }
     >
+      <OfflineBanner updatedAt={today.dataUpdatedAt} />
       {hasMoneyData(data) ? (
         data.currencies.map((currency) => (
           <CurrencyCard key={currency.currency} currency={currency} monthEndDate={monthEndDate} />

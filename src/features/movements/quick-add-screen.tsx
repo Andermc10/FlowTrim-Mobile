@@ -9,6 +9,8 @@ import { errorMessage } from '@/core/api/error-message';
 import { formatMoney } from '@/core/format/money';
 import { productToday, shiftDays } from '@/core/format/product-calendar';
 import { useI18n } from '@/core/i18n/i18n';
+import { useOnline } from '@/core/network/network-status';
+import { OfflineSaveNotice } from '@/shared/ui/offline-banner';
 import { useTheme } from '@/core/theme/theme';
 import { Button } from '@/shared/ui/button';
 import { ChoiceGroup } from '@/shared/ui/choice-group';
@@ -57,6 +59,8 @@ function QuickAddForm({
   const { t, language } = useI18n();
   const router = useRouter();
   const create = useCreateTransaction();
+  // Sin red no se guarda ni se encola nada (HU-90 FR-2).
+  const online = useOnline();
 
   const [draft, setDraft] = useState<QuickAddDraft>({
     type: 'Expense',
@@ -281,12 +285,18 @@ function QuickAddForm({
           </View>
         ) : null}
 
-        <Button label={t('quickAdd.save')} onPress={() => submit(false)} loading={create.isPending} />
+        {online ? null : <OfflineSaveNotice />}
+        <Button
+          label={t('quickAdd.save')}
+          onPress={() => submit(false)}
+          loading={create.isPending}
+          disabled={!online}
+        />
         <Button
           label={t('quickAdd.saveAndAdd')}
           variant="secondary"
           onPress={() => submit(true)}
-          disabled={create.isPending}
+          disabled={create.isPending || !online}
         />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -300,6 +310,7 @@ export function QuickAddScreen() {
   const accounts = useAccounts();
   const categories = useCategories();
   const usage = useCategoryUsage(today);
+  const online = useOnline();
   const [lastAccountId, setLastAccountId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -329,7 +340,12 @@ export function QuickAddScreen() {
   }
   // El uso reciente solo ordena chips: si falla, el formulario funciona igual con el orden por nombre.
   if (accounts.isPending || categories.isPending || usage.isPending || lastAccountId === undefined) {
-    return <StatusScreen busy message={t('quickAdd.loading')} />;
+    // Cuentas y categorías no se guardan en el teléfono: sin red se explica que no se puede registrar (AC-1).
+    return online ? (
+      <StatusScreen busy message={t('quickAdd.loading')} />
+    ) : (
+      <StatusScreen title={t('offline.title')} message={t('offline.cannotSave')} />
+    );
   }
   if (activeAccounts.length === 0) {
     return <StatusScreen title={t('quickAdd.noAccounts.title')} message={t('quickAdd.noAccounts.text')} />;

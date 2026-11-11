@@ -1,5 +1,6 @@
 // Layout raíz: proveedores de toda la app y navegación protegida por sesión.
-import { QueryClientProvider } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
@@ -8,8 +9,17 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ApiProvider } from '@/core/api/api-provider';
 import { createQueryClient } from '@/core/api/query-client';
+import {
+  PERSISTED_CACHE_BUSTER,
+  PERSISTED_MAX_AGE_MS,
+  clearPersistedQueries,
+  createQueryPersister,
+  shouldPersistQuery,
+} from '@/core/api/query-persistence';
 import { useRefetchOnAppFocus } from '@/core/api/query-focus';
 import { AuthProvider, useAuth } from '@/core/auth/auth-provider';
+import { monthOf, productToday } from '@/core/format/product-calendar';
+import { NetworkProvider } from '@/core/network/network-status';
 import { createAuthService } from '@/core/auth/auth-service';
 import { secureTokenStorage } from '@/core/auth/token-store';
 import { AppConfigError, getAppConfig, type AppConfig } from '@/core/config/app-config';
@@ -111,11 +121,25 @@ function readConfig(): ConfigResult {
   }
 }
 
+// Sin sesión no queda copia local (D10): al cerrar o perder la sesión se borra; el caché en memoria ya lo vacía Auth.
+function PersistedCacheGuard() {
+  const { status } = useAuth();
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (status === 'signedOut') {
+      queryClient.clear();
+      void clearPersistedQueries();
+    }
+  }, [status, queryClient]);
+  return null;
+}
+
 function SessionRoot({ config }: { config: AppConfig }) {
   // El servicio de Auth0 se crea una sola vez con la configuración ya validada.
   const [service] = useState(() => createAuthService(config));
   return (
     <AuthProvider service={service} storage={secureTokenStorage}>
+      <PersistedCacheGuard />
       <AppLockProvider device={nativeLockDevice}>
         <ApiProvider baseUrl={config.apiUrl}>
           <RemindersProvider device={nativeReminderDevice}>
@@ -174,25 +198,37 @@ export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   // Al volver al primer plano se recargan los datos vencidos (Today, movimientos…).
   useRefetchOnAppFocus();
+  // Qué se guarda en el teléfono: solo lo de D10 y, de movimientos, el mes actual (calendario del producto).
+  const [persistOptions] = useState(() => ({
+    persister: createQueryPersister(),
+    maxAge: PERSISTED_MAX_AGE_MS,
+    buster: PERSISTED_CACHE_BUSTER,
+    dehydrateOptions: {
+      shouldDehydrateQuery: (query: Parameters<typeof shouldPersistQuery>[0]) =>
+        shouldPersistQuery(query, monthOf(productToday())),
+    },
+  }));
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <PreferencesGate>
-          {(preferences, update) => (
-            <ThemeProvider
-              initialPreference={preferences.theme}
-              onPreferenceChange={(theme: ThemePreference) => update({ theme })}
-            >
-              <I18nProvider
-                initialLanguage={preferences.language}
-                onLanguageChange={(language: Language) => update({ language })}
+      <NetworkProvider>
+        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+          <PreferencesGate>
+            {(preferences, update) => (
+              <ThemeProvider
+                initialPreference={preferences.theme}
+                onPreferenceChange={(theme: ThemePreference) => update({ theme })}
               >
-                <ConfiguredApp />
-              </I18nProvider>
-            </ThemeProvider>
-          )}
-        </PreferencesGate>
-      </QueryClientProvider>
+                <I18nProvider
+                  initialLanguage={preferences.language}
+                  onLanguageChange={(language: Language) => update({ language })}
+                >
+                  <ConfiguredApp />
+                </I18nProvider>
+              </ThemeProvider>
+            )}
+          </PreferencesGate>
+        </PersistQueryClientProvider>
+      </NetworkProvider>
     </SafeAreaProvider>
   );
 }
