@@ -13,3 +13,14 @@ import { notifyManager } from '@tanstack/react-query';
 notifyManager.setScheduler((callback) => {
   void Promise.resolve().then(callback);
 });
+
+// Cada prueba empieza con la red conectada y sin datos guardados: la copia local de la caché (HU-90) no debe pasar de
+// una prueba a otra. Corre antes que los beforeEach de cada archivo, así que estos pueden sembrar datos encima.
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { setNetworkConnected } from '@/testing/network';
+
+beforeEach(async () => {
+  setNetworkConnected(true);
+  await AsyncStorage.clear();
+});
