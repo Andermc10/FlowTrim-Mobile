@@ -44,9 +44,9 @@ export const colors: Record<ColorScheme, ColorTokens> = {
     borderStrong: '#a8c1be',
     primary: '#077a84',
     onPrimary: '#ffffff',
-    // Más oscuro que la web (#008f61 da 4.12:1 sobre blanco y no cumple WCAG AA).
+    // Igual que la web desde TD-003: verde y ámbar con más de 4,5:1 en blanco, fondo y superficie suave.
     success: '#007f55',
-    warning: '#a86400',
+    warning: '#995a00',
     danger: '#c63d47',
   },
 };
